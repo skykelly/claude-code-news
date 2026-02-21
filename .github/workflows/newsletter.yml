@@ -1,0 +1,90 @@
+name: Claude Code Newsletter
+
+on:
+  # 매주 일요일 23:00 UTC = 한국 시간 08:00
+  schedule:
+    - cron: "0 23 * * 0"
+
+  # 수동 실행 (테스트 모드 선택 가능)
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "테스트 모드 (mock 데이터 사용)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      date:
+        description: "기준 날짜 (YYYY-MM-DD, 기본: 오늘)"
+        required: false
+        default: ""
+
+jobs:
+  generate:
+    name: 뉴스레터 생성
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 의존 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: 파이프라인 실행
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          OUTPUT_DIR: output
+          NEWSLETTER_LANG: ko
+        run: |
+          ARGS=""
+
+          # 날짜 인수
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            ARGS="$ARGS --date ${{ github.event.inputs.date }}"
+          fi
+
+          # 테스트 모드
+          if [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
+            ARGS="$ARGS --test"
+          fi
+
+          python src/main.py $ARGS
+
+      - name: 날짜 변수 설정
+        id: date
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            echo "value=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 생성 결과 확인
+        run: |
+          DATE="${{ steps.date.outputs.value }}"
+          echo "=== 생성된 파일 ==="
+          ls -lh output/$DATE/ || echo "출력 디렉토리 없음"
+
+          echo ""
+          echo "=== summary.json ==="
+          cat output/$DATE/summary.json || echo "summary.json 없음"
+
+      - name: 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: newsletter-${{ steps.date.outputs.value }}
+          path: output/${{ steps.date.outputs.value }}/
+          retention-days: 30

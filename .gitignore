@@ -1,0 +1,22 @@
+# 환경 변수
+.env
+
+# 가상환경
+.venv/
+venv/
+
+# 생성된 출력물
+output/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# Claude Code 로컬 설정 (개인 설정은 공유하지 않음)
+.claude/settings.local.json
+.claude/logs/
