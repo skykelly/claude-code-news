@@ -14,6 +14,7 @@ from collect import collect
 from filter import filter_and_curate
 from format import format_output
 from generate import generate
+from send import send_gmail
 
 try:
     from dotenv import load_dotenv
@@ -31,6 +32,7 @@ def parse_args():
         help="특정 단계만 실행",
     )
     parser.add_argument("--test", action="store_true", help="테스트 모드 (mock 데이터 사용)")
+    parser.add_argument("--send", metavar="EMAIL", help="생성 후 지정 이메일로 발송")
     return parser.parse_args()
 
 
@@ -53,7 +55,7 @@ def main():
 
     print(f"\n{'='*50}")
     print(f"  Claude Code 뉴스레터 파이프라인")
-    print(f"  날짜: {date_str}  |  언어: {lang}  |  테스트: {args.test}")
+    print(f"  날짜: {date_str}  |  언어: {lang}  |  테스트: {args.test}  |  발송: {args.send or '없음'}")
     print(f"  출력: {output_dir}")
     print(f"{'='*50}\n")
 
@@ -111,6 +113,12 @@ def main():
     if step in (None, "format"):
         print("[4/4] HTML / TXT 변환 중...")
         summary = format_output(content_md, curated, output_dir, template_dir)
+        print()
+
+    # ---------- 이메일 발송 ----------
+    if args.send:
+        print(f"[+] 이메일 발송 중 → {args.send}")
+        send_gmail(output_dir, to_email=args.send)
         print()
 
     # ---------- 최종 결과 ----------

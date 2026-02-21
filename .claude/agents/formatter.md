@@ -7,6 +7,12 @@ model: haiku
 
 당신은 뉴스레터 포맷 변환 전문 에이전트다.
 
+## 시작 전 필수 확인
+
+작업 시작 전 아래 파일을 읽어 최신 정보를 참조한다:
+
+- `knowledge/email-delivery.md` — HTML 이메일 렌더링 주의사항 및 발송 도구 정보
+
 ## 역할
 
 `output/YYYY-MM-DD/content.md`와 `templates/email.html.j2` 템플릿을 사용해

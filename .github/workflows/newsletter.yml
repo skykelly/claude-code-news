@@ -20,6 +20,10 @@ on:
         description: "기준 날짜 (YYYY-MM-DD, 기본: 오늘)"
         required: false
         default: ""
+      recipient:
+        description: "수신 이메일 (비워두면 NEWSLETTER_TO Secret 사용)"
+        required: false
+        default: ""
 
 jobs:
   generate:
@@ -40,11 +44,13 @@ jobs:
       - name: 의존 패키지 설치
         run: pip install -r requirements.txt
 
-      - name: 파이프라인 실행
+      - name: 파이프라인 실행 및 발송
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           OUTPUT_DIR: output
           NEWSLETTER_LANG: ko
         run: |
@@ -58,6 +64,17 @@ jobs:
           # 테스트 모드
           if [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
             ARGS="$ARGS --test"
+          fi
+
+          # 수신 이메일 결정: 수동 입력 > Secret
+          RECIPIENT="${{ github.event.inputs.recipient }}"
+          if [ -z "$RECIPIENT" ]; then
+            RECIPIENT="${{ secrets.NEWSLETTER_TO }}"
+          fi
+
+          # 수신자가 있으면 발송
+          if [ -n "$RECIPIENT" ]; then
+            ARGS="$ARGS --send $RECIPIENT"
           fi
 
           python src/main.py $ARGS

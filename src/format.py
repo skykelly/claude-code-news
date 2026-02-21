@@ -60,7 +60,7 @@ def format_output(content_md: str, curated: dict, output_dir: Path, template_dir
 
     template_file = template_dir / "email.html.j2"
     if template_file.exists():
-        env = Environment(loader=FileSystemLoader(str(template_dir)), autoescape=True)
+        env = Environment(loader=FileSystemLoader(str(template_dir)), autoescape=False)
         tmpl = env.get_template("email.html.j2")
         html_out = tmpl.render(content=html_body, unsubscribe_url="#unsubscribe")
     else:
