@@ -3,7 +3,7 @@ name: Claude Code Newsletter
 on:
   # 매주 일요일 23:00 UTC = 한국 시간 08:00
   schedule:
-    - cron: "0 23 * * 0"
+    - cron: "37 23 * * 6"
 
   # 수동 실행 (테스트 모드 선택 가능)
   workflow_dispatch:
