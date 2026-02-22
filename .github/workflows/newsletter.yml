@@ -1,9 +1,9 @@
 name: Claude Code Newsletter
 
 on:
-  # 매주 일요일 00:05 UTC = 한국 시간 일요일 09:05
+  # 매주 일요일 00:20 UTC = 한국 시간 일요일 09:20
   schedule:
-    - cron: "5 0 * * 0"
+    - cron: "20 0 * * 0"
 
   # 수동 실행 (테스트 모드 선택 가능)
   workflow_dispatch:
