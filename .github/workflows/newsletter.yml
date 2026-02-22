@@ -44,6 +44,15 @@ jobs:
       - name: 의존 패키지 설치
         run: pip install -r requirements.txt
 
+      - name: 날짜 변수 설정
+        id: date
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            echo "value=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          fi
+
       - name: 파이프라인 실행 및 발송
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -54,16 +63,16 @@ jobs:
           OUTPUT_DIR: output
           NEWSLETTER_LANG: ko
         run: |
-          ARGS=""
+          ARGS=()
 
           # 날짜 인수
           if [ -n "${{ github.event.inputs.date }}" ]; then
-            ARGS="$ARGS --date ${{ github.event.inputs.date }}"
+            ARGS+=(--date "${{ github.event.inputs.date }}")
           fi
 
           # 테스트 모드
           if [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
-            ARGS="$ARGS --test"
+            ARGS+=(--test)
           fi
 
           # 수신 이메일 결정: 수동 입력 > Secret
@@ -74,19 +83,10 @@ jobs:
 
           # 수신자가 있으면 발송
           if [ -n "$RECIPIENT" ]; then
-            ARGS="$ARGS --send $RECIPIENT"
+            ARGS+=(--send "$RECIPIENT")
           fi
 
-          python src/main.py $ARGS
-
-      - name: 날짜 변수 설정
-        id: date
-        run: |
-          if [ -n "${{ github.event.inputs.date }}" ]; then
-            echo "value=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
-          else
-            echo "value=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
-          fi
+          python src/main.py "${ARGS[@]}"
 
       - name: 생성 결과 확인
         run: |
